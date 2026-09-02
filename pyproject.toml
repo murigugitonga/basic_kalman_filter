@@ -1,0 +1,22 @@
+[project]
+name = "basic-kalman-filter"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Murigu Gitonga", email = "123919392+murigugitonga@users.noreply.github.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.141.1",
+    "numpy>=2.5.2",
+    "uvicorn>=0.52.4",
+    "websockets>=17.1",
+]
+
+[project.scripts]
+basic-kalman-filter = "basic_kalman_filter:main"
+
+[build-system]
+requires = ["uv_build>=0.12.9,<0.13.0"]
+build-backend = "uv_build"
