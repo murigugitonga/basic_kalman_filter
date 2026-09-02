@@ -1,10 +1,9 @@
 # Air-Gapped Real-Time 1D Kalman Filter Simulation
 
-An ultra-fast, zero-dependency virtualization dashboard built with Python 3.12, **FastAPI**, **WebSockets**, and the **uv** package manager. The frontend utilizes responsive **Native SVG vectors** to enable real-time charting in network-restricted, firewalled development environments like GitHub Codespaces.
+This project is an ultra-fast, zero-dependency virtualization dashboard built with Python 3.12, **FastAPI**, **WebSockets** and the **uv** package manager. The frontend utilizes responsive **Native SVG vectors** to enable real-time charting in network-restricted, firewalled development environments like GitHub Codespaces.
 
----
 
-## 💡 What is a Kalman Filter?
+## What is a Kalman Filter?
 
 A **Kalman Filter** is an optimal recursive mathematical algorithm that estimates the true, hidden state of a dynamic system from a series of incomplete and noisy measurements. 
 
@@ -20,9 +19,8 @@ $$	ext{Kalman Gain } (K) = rac{	ext{Model Error}}{	ext{Model Error} + 	ext{Sens
 * If the sensor is highly noisy, $K$ drops close to $0$, and the filter trusts the physical model rules.
 * If the physical model is highly uncertain, $K$ climbs close to $1$, and the filter trusts the new sensor data.
 
----
 
-## 🏃‍♂️ What This Simulation Does
+## What This Simulation Does
 
 This application virtualizes a vehicle moving at a constant baseline target position of **100 meters**.
 
@@ -30,9 +28,8 @@ This application virtualizes a vehicle moving at a constant baseline target posi
 * **The Sensor (Red Line):** Simulates a noisy tracker (like a low-cost GPS unit). It adds heavy Gaussian noise ($\sigma = 5.0$), causing the raw telemetry data to bounce erratically between 80m and 120m.
 * **The Filter (Green Line):** The Kalman algorithm tracking the sensor. We initialize the filter with a bad guess (**80m** position estimate with a high error variance of **100**). Within milliseconds, the filter recognizes that the red sensor data is swinging wildly while the physical state remains steady. It quickly converges, filters out the spikes and tracks the blue true position smoothly.
 
----
 
-## 🛠️ Local Development Quickstart
+## Local Development Quickstart
 
 This project is fully managed under the `uv` toolchain.
 
@@ -48,9 +45,8 @@ uv run uvicorn main:app --reload
 ```
 Open your local forwarding terminal port to view the live dashboard.
 
----
 
-## 🐳 Docker Production Setup
+## Docker Production Setup
 The project uses a structured multi-stage Docker build matching the native `uv` format:
 ```dockerfile
 FROM ghcr.io/astral-sh/uv:python3.11-alpine
