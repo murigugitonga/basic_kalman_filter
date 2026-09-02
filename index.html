@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Live Kalman Filter - Native</title>
+    <style>
+        body { font-family: system-ui, sans-serif; margin: 40px; background: #f4f6f9; color: #333; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        button { padding: 10px 20px; font-size: 15px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; font-weight: bold; }
+        button:hover { background: #0056b3; }
+        .status { font-weight: bold; color: #ff9900; }
+        .connected { color: #28a745; }
+        .legend { display: flex; gap: 20px; margin-top: 15px; font-size: 14px; font-weight: bold; }
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        svg { background: #fafafa; border: 1px solid #ddd; border-radius: 4px; margin-top: 20px; width: 100%; height: 400px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Live 1D Kalman Filter (Zero Dependency Air-Gapped Dashboard)</h2>
+        <div>
+            <button onclick="startLiveStream()">Start Streaming</button>
+            <span> Status: <span id="statusLabel" class="status">Disconnected</span></span>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item"><div style="width:15px; height:3px; background:rgba(255, 99, 132, 0.7)"></div> Noisy Measurement</div>
+            <div class="legend-item"><div style="width:15px; height:3px; background:rgb(54, 162, 235)"></div> True Position</div>
+            <div class="legend-item"><div style="width:15px; height:3px; background:rgb(75, 192, 192); height:5px;"></div> Kalman Estimate</div>
+        </div>
+
+        <!-- The graph framework rendered natively via browser vectors -->
+        <svg id="svgChart" viewBox="0 0 1000 400">
+            <!-- Background grid baseline reference line at value 100 -->
+            <line x1="0" y1="200" x2="1000" y2="200" stroke="#eee" stroke-width="2" />
+            <path id="pathMeasured" d="" fill="none" stroke="rgba(255, 99, 132, 0.6)" stroke-width="2" />
+            <path id="pathTrue" d="" fill="none" stroke="rgb(54, 162, 235)" stroke-width="2" />
+            <path id="pathEstimated" d="" fill="none" stroke="rgb(75, 192, 192)" stroke-width="4" />
+        </svg>
+    </div>
+
+    <script>
+        let ws;
+        let dataHistory = [];
+        const maxPoints = 60;
+
+        // Grid coordinates: width 1000, height 400.
+        // We track variations centered around position 100.
+        // Formula to convert sensor position value to SVG pixel height:
+        // Y_pixel = 200 - (Value - 100) * 6
+        function valueToY(val) {
+            return 200 - (val - 100) * 6;
+        }
+
+        function redrawChart() {
+            if (dataHistory.length === 0) return;
+
+            let measuredPoints = [];
+            let truePoints = [];
+            let estimatedPoints = [];
+
+            const stepWidth = 1000 / (maxPoints - 1);
+
+            for (let i = 0; i < dataHistory.length; i++) {
+                const x = i * stepWidth;
+                const d = dataHistory[i];
+
+                const yMeasured = valueToY(d.measured);
+                const yTrue = valueToY(d.true);
+                const yEstimated = valueToY(d.estimated);
+
+                const prefix = (i === 0) ? 'M' : 'L';
+                measuredPoints.push(`${prefix} ${x} ${yMeasured}`);
+                truePoints.push(`${prefix} ${x} ${yTrue}`);
+                estimatedPoints.push(`${prefix} ${x} ${yEstimated}`);
+            }
+
+            document.getElementById('pathMeasured').setAttribute('d', measuredPoints.join(' '));
+            document.getElementById('pathTrue').setAttribute('d', truePoints.join(' '));
+            document.getElementById('pathEstimated').setAttribute('d', estimatedPoints.join(' '));
+        }
+
+        function startLiveStream() {
+            if (ws) { ws.close(); }
+
+            const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            ws = new WebSocket(protocol + window.location.host + '/ws/stream');
+
+            ws.onopen = () => {
+                document.getElementById('statusLabel').innerText = "Connected";
+                document.getElementById('statusLabel').className = "status connected";
+                dataHistory = [];
+            };
+
+            ws.onmessage = (event) => {
+                const packet = JSON.parse(event.data);
+                dataHistory.push(packet);
+
+                if (dataHistory.length > maxPoints) {
+                    dataHistory.shift();
+                }
+
+                redrawChart();
+            };
+
+            ws.onclose = () => {
+                document.getElementById('statusLabel').innerText = "Disconnected";
+                document.getElementById('statusLabel').className = "status";
+            };
+        }
+    </script>
+</body>
+</html>
